@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>JsJavaOpenSave</title>
+        <style type="text/css" media="screen">
+            body {background: #fff; width: 500px; margin: 20px auto;}
+            label, input, textarea, h1, h2, p { font-family: Arial, sans-serif; font-size: 12pt;}
+            input, textarea { border: solid 1px #aaa; padding: 4px; width: 98%;}
+            label { font-weight: bold;}
+            h1 { font-size: 30pt; font-weight: bold; letter-spacing: -1px;}
+            h2 { font-size: 14pt;}
+            pre { overflow: auto; padding: 10px; background: #222; color: #ccc;}
+        </style>
+        <script type="text/javascript" src="src/JsJavaOpenSave.js"></script>
+    </head>
+    <body>
+        <h1>JsJavaOpenSave Example</h1>
+        <p>More info available at the <a href="http://github.com/marnusw/js-java-open-save">Github Project Page</a></p>
+        <form>
+            <p>
+                <label for="filename">Filename</label><br />
+                <input type="text" name="filename" value="testfile.txt" id="filename" />
+            </p>
+            <p>
+                <label for="data">File Contents</label><br />
+                <textarea cols="60" rows="10" name="data" id="data">
+                    Whatever you put in this text box will be downloaded and saved in the file. If you leave it blank, no file will be downloaded
+                </textarea>
+            </p>
+            <p id="downloadify">
+                You must have Flash 10 installed to download this file.
+            </p>
+        </form>
+        
+        <applet code="MultiFileDownload/DownloadManager.class" width="1" height ="1"
+                archive="/media/MultiFileDownload.jar"></applet>
+
+        <script type="text/javascript">
+        </script>
+    </body>
+</html>

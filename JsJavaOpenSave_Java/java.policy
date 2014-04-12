@@ -1,0 +1,6 @@
+
+// Add the following permissions to your java.policy file while testing locally.
+
+grant codeBase "http://test-env-url/-" {
+	permission java.security.AllPermission;
+};

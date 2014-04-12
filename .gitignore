@@ -1,0 +1,8 @@
+.DS_Store
+.idea
+
+/JsJavaOpenSave_Java/nbproject/private/
+/JsJavaOpenSave_Java/build/
+/JsJavaOpenSave_Java/dist/
+
+/JsJavaOpenSave_JS/nbproject/private/
