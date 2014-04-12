@@ -1,9 +1,9 @@
-package MultiFileDownload;
+package JsJavaOpenSave;
 
 import java.applet.Applet;
 import java.io.*;
 
-public class DownloadManager extends Applet {
+public class JsJavaOpenSave extends Applet {
 
     @Override
     public void init() {
