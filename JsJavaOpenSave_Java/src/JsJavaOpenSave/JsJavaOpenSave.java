@@ -7,7 +7,29 @@ public class JsJavaOpenSave extends Applet {
 
     @Override
     public void init() {
+        this.download("C:/Users/marnusw/Downloads/google.html", "http://www.google.com");
         this.write("C:/Users/marnusw/Downloads/output.txt", "Output file contents");
+    }
+    
+    public void download(String fileName, String url) {
+        this.download(fileName, url, 1024);
+    }
+    
+    public void download(String fileName, String url, int bufSize) {
+        try (
+            BufferedInputStream in = new BufferedInputStream(new java.net.URL(url).openStream());
+            BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(new File(fileName)), bufSize);
+        ) {
+            byte data[] = new byte[bufSize];
+            while (in.read(data, 0, bufSize) >= 0) {
+                out.write(data);
+            }
+            
+            out.close();
+            in.close();
+        } catch (IOException ioe) {
+            ioe.printStackTrace();
+        }
     }
     
     public void write(String fileName, String data) {
@@ -18,7 +40,7 @@ public class JsJavaOpenSave extends Applet {
             out.write(data);
             out.close();
         } catch (IOException ioe) {
-            // Handle the exception.
+            ioe.printStackTrace();
         }
     }
     
@@ -30,7 +52,7 @@ public class JsJavaOpenSave extends Applet {
             // Read from the file
             in.close();
         } catch (IOException ioe) {
-            // Handle the exception.
+            ioe.printStackTrace();
         }
         return "Return read data";
     }
