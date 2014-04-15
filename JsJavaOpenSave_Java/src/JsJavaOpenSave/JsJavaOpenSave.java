@@ -1,6 +1,15 @@
+/*
+ JsJavaOpenSave: Client Side File Management
+ JavaScript + Java Library
+ 
+ Version: 0.1
+ 
+ Copyright (c) 2014 Marnus Weststrate (marnusw@mwconsult.co.za)
+ 
+ */
+
 package JsJavaOpenSave;
 
-import java.lang.IllegalArgumentException;
 import java.applet.Applet;
 import java.io.*;
 
@@ -43,7 +52,7 @@ public class JsJavaOpenSave extends Applet {
         this.id = this.getParameter("id");
         this.fileName = this.getParameter("fileName");
         if (this.id == null || this.fileName == null) {
-            this.log("ERROR: The id and fileName parameters are required by the JsJavaOpenSave applet.");
+            this.error("ERROR: The id and fileName parameters are required by the JsJavaOpenSave applet.");
         }
         
         this.data = this.getParameter("data");
@@ -74,22 +83,32 @@ public class JsJavaOpenSave extends Applet {
      * @param url The URL to download to the specified file name.
      */
     public void download(String fileName, String url) {
+        java.net.URLConnection resource;
+        try {
+            resource = new java.net.URL(url).openConnection();
+        } catch (IOException ioe) {
+            this.error(ioe.getMessage());
+            return;
+        }
         try (
-            BufferedInputStream in = new BufferedInputStream(new java.net.URL(url).openStream());
+            BufferedInputStream in = new BufferedInputStream(resource.getInputStream());
             BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(new File(fileName)), this.bufSize);
         ) {
-            this.log("Starting the downloaded of " + url);
-            byte data[] = new byte[this.bufSize];
-            int read, count = 0;
-            while ((read = in.read(data, 0, this.bufSize)) >= 0) {
-                this.log(++count + ") Downloaded " + this.fileName + " " + read + " bytes");
-                out.write(data);
+            byte buffer[] = new byte[this.bufSize];
+            int total = resource.getContentLength(),
+                done = 0,
+                read;
+            this.progress(done, total);
+            while ((read = in.read(buffer, 0, this.bufSize)) >= 0) {
+                out.write(buffer);
+                done += read;
+                this.progress(done, total);
             }
             out.close();
             in.close();
-            this.runJS("removeApplet", quote(this.id));
+            this.complete();
         } catch (IOException ioe) {
-            this.log("download() IO error: " + ioe.getMessage());
+            this.error(ioe.getMessage());
         }
     }
 
@@ -100,47 +119,72 @@ public class JsJavaOpenSave extends Applet {
      * @param data The data that will be the new contents of the file.
      */
     public void write(String fileName, String data) {
-        this.log("Save to: " + fileName);
-        this.log("Data: " + data);
         File f = new File(fileName);
         try (
             BufferedWriter out = new BufferedWriter(new FileWriter(f, true));
         ) {
             out.write(data);
             out.close();
+            this.complete();
         } catch (IOException ioe) {
-            this.log("write() IO error: " + ioe.getMessage());
+            this.error(ioe.getMessage());
         }
-        this.log("Wrote " + fileName);
     }
 
     /**
      * Read and return the contents of the file at the provided file name.
      * 
      * @param fileName The full path and name of the file to read.
-     * @return The contents read from the file.
      */
-    public String read(String fileName) {
-        File f = new File(fileName);
+    public void read(String fileName) {
         try (
-            FileInputStream in = new FileInputStream(f);
+            BufferedReader br = new BufferedReader(new FileReader(fileName));
         ) {
-            // Read from the file
-            in.close();
+            StringBuilder sb = new StringBuilder();
+            String line = br.readLine();
+            while (line != null) {
+                sb.append(line);
+                sb.append("\n");
+                line = br.readLine();
+            }
+            br.close();
+            this.complete(sb.toString());
         } catch (IOException ioe) {
-            this.log("read() IO error: " + ioe.getMessage());
+            this.error(ioe.getMessage());
         }
-        return "Return read data";
     }
 
     /**
-     * Log text to the JavaScript console.
-     * 
-     * @param text 
+     * Call back to the JavaScript code when an operation is completed.
      */
-    private void log(String text) {
-        this.runJS("log", this.quote(text));
+    private void complete() {
+        this.callJS("onComplete", quote(this.id));
     }
+    /**
+     * Call back to the JavaScript code when an operation is completed with data.
+     * 
+     * @param data Data to pass back to the 
+     */
+    private void complete(String data) {
+        this.callJS("onComplete", quote(this.id) + "," + quote(data));
+    }
+    /**
+     * Periodic call back to the JavaScript code to report progress on a long-running task.
+     * 
+     * @param done The amount of work that has been done.
+     * @param total The total amount of work to be done.
+     */
+    private void progress(int done, int total) {
+        this.callJS("onProgress", quote(this.id) + "," + done + "," + total);
+    }
+    /**
+     * Call back to the JavaScript code when an operation is completed.
+     * @param data Data to pass back to the 
+     */
+    private void error(String msg) {
+        this.callJS("onError", quote(this.id) + "," + quote(msg));
+    }
+    
     /**
      * Add single quotes around a string so it can be used in an eval() statement as a JavaScript string.
      * 
@@ -150,22 +194,13 @@ public class JsJavaOpenSave extends Applet {
     private String quote(String str) {
         return "'" + str + "'";
     }
-
-    /**
-     * Run a JavaScript method on the JsJavaOpenSave JS object without parameters.
-     * @param method The method name.
-     * @return The return value of the JS method as a string.
-     */
-    private String runJS(String method) {
-        return this.runJS(method, "");
-    }
     /**
      * Run a JavaScript method on the JsJavaOpenSave JS object without parameters.
      * @param method The method name.
      * @param params A string of parameters which can be eval'ed within the brackets of a method call.
      * @return The return value of the JS method as a string.
      */
-    private String runJS(String method, String params) {
+    private String callJS(String method, String params) {
         return (String) this.window.eval("JsJavaOpenSave." + method + "(" + params + ")");
     }
 }
