@@ -182,7 +182,7 @@ public class JsJavaOpenSave extends Applet {
      * @param data Data to pass back to the 
      */
     private void error(String msg) {
-        this.callJS("onError", quote(this.id) + "," + quote(msg));
+        this.callJS("onError", quote(this.id) + "," + quote("Java Error: " + msg));
     }
     
     /**

@@ -15,33 +15,86 @@
     <body>
         <h1>JsJavaOpenSave Example</h1>
         <p>More info available at the <a href="http://github.com/marnusw/js-java-open-save">Github Project Page</a></p>
+        
+        <hr />
+        <h2>Download a URL to a file</h2>
         <form>
             <p>
-                <label for="filename">Filename</label><br />
-                <input type="text" name="filename" value="testfile.txt" id="filename" />
+                <label for="dwnlFileName">File Name</label><br />
+                <input type="text" name="dwnlFileName" value="C:\Users\marnusw\Downloads\download.pdf" id="dwnlFileName" />
             </p>
             <p>
-                <label for="data">File Contents</label><br />
-                <textarea cols="60" rows="10" name="data" id="data">Whatever you put in this text box will be downloaded and saved in the file. If you leave it blank, no file will be downloaded</textarea>
+                <label for="dwnlUrl">URL</label><br />
+                <input type="text" name="dwnlUrl" value="http://dev.jssave/media/file3.pdf" id="dwnlUrl" />
             </p>
+            <button id="downloadButton">Download</button>
         </form>
         
-        <button onclick="document.getElementById('JsJavaOpenSave').saveFile('C:/Users/marnusw/Downloads/output1.txt', 'Output file contents');">Click me</button>
+        <br /><hr />
+        <h2>Save to a file</h2>
+        <form>
+            <p>
+                <label for="saveFileName">File Name</label><br />
+                <input type="text" name="saveFileName" value="C:\Users\marnusw\Downloads\save.txt" id="saveFileName" />
+            </p>
+            <p>
+                <label for="saveData">File Contents</label><br />
+                <textarea cols="60" rows="3" name="saveData" id="saveData">Whatever you put in this text box will be saved to the file. If you leave it blank, no file will be created.</textarea>
+            </p>
+            <button id="saveButton">Save</button>
+        </form>
+        
+        <br /><hr />
+        <h2>Load from a file</h2>
+        <form>
+            <p>
+                <label for="loadFileName">File Name</label><br />
+                <input type="text" name="loadFileName" value="C:\Users\marnusw\Downloads\load.txt" id="loadFileName" />
+            </p>
+            <p>
+                <label for="loadData">File Contents</label><br />
+                <textarea readonly="readonly" cols="60" rows="3" name="loadData" id="loadData"></textarea>
+            </p>
+            <button id="loadButton">Load</button>
+        </form>
         
         <script type="text/javascript" src="src/JsJavaOpenSave.js"></script>
         <script type="text/javascript">
             window.onload = function() {
-                JsJavaOpenSave.saveAs('C:/Users/marnusw/Downloads/output1.txt', 'Output file contents');
+                // Download
+                document.getElementById('downloadButton').onclick = function() {
+                    var fileName = document.getElementById('dwnlFileName').value,
+                        url = document.getElementById('dwnlUrl').value;
+                    JsJavaOpenSave.download(fileName, url, {
+                        onProgress : function(done, total) { console.log('Downloaded: ' + done + ' of ' + total); },
+                        onComplete : function() { console.log('Downloaded to: ' + fileName); },
+                        onError    : function(msg) { console.log(msg); }
+                    });
+                    return false;
+                };
+                // Save
+                document.getElementById('saveButton').onclick = function() {
+                    var fileName = document.getElementById('saveFileName').value,
+                        data = document.getElementById('saveData').value;
+                    JsJavaOpenSave.save(fileName, data, {
+                        onComplete : function() { console.log('Saved to: ' + fileName); },
+                        onError    : function(msg) { console.log(msg); }
+                    });
+                    return false;
+                };
+                // Load
+                document.getElementById('loadButton').onclick = function() {
+                    var fileName = document.getElementById('loadFileName').value;
+                    JsJavaOpenSave.load(fileName, {
+                        onComplete : function(data) {
+                            console.log('Read from: ' + fileName);
+                            document.getElementById('loadData').value = data;
+                        },
+                        onError : function(msg) { console.log(msg); }
+                    });
+                    return false;
+                };
             };
-//            setTimeout(function() {
-//                JsJavaOpenSave.download('C:/Users/marnusw/Downloads/file3.pdf', 'http://dev.jssave/media/file3.pdf');
-//            }, 10);
-//            setTimeout(function() {
-//                JsJavaOpenSave.download('C:/Users/marnusw/Downloads/file4.pdf', 'http://dev.jssave/media/file4.pdf');
-//            }, 10);
-//            setTimeout(function() {
-//                JsJavaOpenSave.save("C:/Users/marnusw/Downloads/output1.txt", "Output file contents");
-//            }, 10);
         </script>
     </body>
 </html>
