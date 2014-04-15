@@ -11,7 +11,6 @@
             h2 { font-size: 14pt;}
             pre { overflow: auto; padding: 10px; background: #222; color: #ccc;}
         </style>
-        <script type="text/javascript" src="src/JsJavaOpenSave.js"></script>
     </head>
     <body>
         <h1>JsJavaOpenSave Example</h1>
@@ -23,17 +22,28 @@
             </p>
             <p>
                 <label for="data">File Contents</label><br />
-                <textarea cols="60" rows="10" name="data" id="data">
-                    Whatever you put in this text box will be downloaded and saved in the file. If you leave it blank, no file will be downloaded
-                </textarea>
+                <textarea cols="60" rows="10" name="data" id="data">Whatever you put in this text box will be downloaded and saved in the file. If you leave it blank, no file will be downloaded</textarea>
             </p>
         </form>
         
-        <div id="downloadify">Java applets must be allowed for this service to work.</div>
-        <applet code="JsJavaOpenSave/JsJavaOpenSave.class" width="1" height ="1"
-                archive="/media/JsJavaOpenSave.jar"></applet>
-
+        <button onclick="document.getElementById('JsJavaOpenSave').saveFile('C:/Users/marnusw/Downloads/output1.txt', 'Output file contents');">Click me</button>
+        
+        <applet id="JsJavaOpenSave" width="200" height="200" scriptable="true" archive="/media/JsJavaOpenSave.jar" code="JsJavaOpenSave/JsJavaOpenSave.class"></applet>
+        
+        <script type="text/javascript" src="src/JsJavaOpenSave.js"></script>
         <script type="text/javascript">
+            window.onload = function() {
+                JsJavaOpenSave.saveAs('C:/Users/marnusw/Downloads/output1.txt', 'Output file contents');
+            };
+//            setTimeout(function() {
+//                JsJavaOpenSave.download('C:/Users/marnusw/Downloads/file3.pdf', 'http://dev.jssave/media/file3.pdf');
+//            }, 10);
+//            setTimeout(function() {
+//                JsJavaOpenSave.download('C:/Users/marnusw/Downloads/file4.pdf', 'http://dev.jssave/media/file4.pdf');
+//            }, 10);
+//            setTimeout(function() {
+//                JsJavaOpenSave.save("C:/Users/marnusw/Downloads/output1.txt", "Output file contents");
+//            }, 10);
         </script>
     </body>
 </html>
