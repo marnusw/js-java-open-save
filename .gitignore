@@ -1,10 +1,9 @@
 .DS_Store
 .idea
 
-/JsJavaOpenSave_Java/nbproject/private/
-/JsJavaOpenSave_Java/build/
-/JsJavaOpenSave_Java/dist/
+/src-java/nbproject/private/
+/src-java/build/
+/src-java/dist/
 
-/JsJavaOpenSave_JS/nbproject/private/
-
-/JsJavaOpenSave_JS/media/
+/src-js/nbproject/private/
+/src-js/media/
