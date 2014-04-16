@@ -192,22 +192,29 @@ function setJarPath(jar) {
 // Support for jQuery
 if (window.jQuery !== undefined) {
     (function($) {
+        var lastId;
         $.jjosFileAPI = {
             setJarPath: setJarPath,
+            getOpId: function() {
+                return lastId;
+            },
             download: function(fileName, url) {
                 var deferred = $.Deferred();
-                JsJavaOpenSave.download(fileName, url, getCallbacks(deferred));
+                lastId = JsJavaOpenSave.download(fileName, url, getCallbacks(deferred));
                 return deferred.promise();
             },
             save: function(fileName, data) {
                 var deferred = $.Deferred();
-                JsJavaOpenSave.save(fileName, data, getCallbacks(deferred));
+                lastId = JsJavaOpenSave.save(fileName, data, getCallbacks(deferred));
                 return deferred.promise();
             },
             load: function(fileName) {
                 var deferred = $.Deferred();
-                JsJavaOpenSave.load(fileName, getCallbacks(deferred));
+                lastId = JsJavaOpenSave.load(fileName, getCallbacks(deferred));
                 return deferred.promise();
+            },
+            cancel: function(id) {
+                JsJavaOpenSave.cancel(id);
             }
         };
     })(jQuery);
@@ -217,24 +224,31 @@ if (window.jQuery !== undefined) {
 if (window.angular !== undefined) {
     angular.module('jsJavaOpenSave', [])
     .factory('jjosFileAPI', ['$q', function($q) {
+        var lastId;
         return {
             setJarPath: setJarPath,
+            getOpId: function() {
+                return lastId;
+            },
             download: function(fileName, url) {
                 var deferred = $q.defer();
-                JsJavaOpenSave.download(fileName, url, getCallbacks(deferred));
+                lastId = JsJavaOpenSave.download(fileName, url, getCallbacks(deferred));
                 return deferred.promise;
             },
             save: function(fileName, data) {
                 var deferred = $q.defer();
-                JsJavaOpenSave.save(fileName, data, getCallbacks(deferred));
+                lastId = JsJavaOpenSave.save(fileName, data, getCallbacks(deferred));
                 return deferred.promise;
             },
             load: function(fileName) {
                 var deferred = $q.defer();
-                JsJavaOpenSave.load(fileName, getCallbacks(deferred));
+                lastId = JsJavaOpenSave.load(fileName, getCallbacks(deferred));
                 return deferred.promise;
+            },
+            cancel: function(id) {
+                JsJavaOpenSave.cancel(id);
             }
-        }
+        };
     }]);
 }
     

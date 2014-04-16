@@ -66,6 +66,9 @@ public class JsJavaOpenSave extends Applet {
      */
     @Override
     public void init() throws JSException {
+        // In Java 7 IPv6 traffic is preferred which causes a download over IPv4 to hang on some operating systems.
+        System.setProperty("java.net.preferIPv4Stack", "true");
+        
         this.window = JSObject.getWindow(this);
         
         this.id = this.getParameter("id");
@@ -120,16 +123,20 @@ public class JsJavaOpenSave extends Applet {
         ) {
             byte buffer[] = new byte[this.bufSize];
             int total = resource.getContentLength(),
-                stepSize = (total/this.bufSize),
-                majorStepInterval = stepSize > 1000 ? stepSize / 1000 : 1, // max progress() calls == 1000
+                progressFilter = 100, // Call progress every 150 KB by default
                 count = 0,
                 done = 0,
                 read;
+            if (total > 100000000) {
+                progressFilter = 600 * 1000 / this.bufSize; // Call progress every 600 KB
+            } else if (total > 1000000) {
+                progressFilter = 90 * 1000 / this.bufSize; // Call progress every 90 KB
+            }
             this.progress(done, total);
             while ((read = in.read(buffer, 0, this.bufSize)) >= 0) {
                 out.write(buffer);
                 done += read;
-                if (++count % majorStepInterval == 0) {
+                if (++count % progressFilter == 0) {
                     this.progress(done, total);
                 }
             }
