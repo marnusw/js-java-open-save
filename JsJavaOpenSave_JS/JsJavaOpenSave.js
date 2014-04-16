@@ -27,9 +27,9 @@
     var JJOS = window.JsJavaOpenSave = {
         params: {
             code:   'JsJavaOpenSave/JsJavaOpenSave.class',
-            jar:    '/media/JsJavaOpenSave.jar',
-            height: '200',
-            width:  '200'
+            jar:    '/lib/js-java-open-save/JsJavaOpenSave.jar',
+            height: '1',
+            width:  '1'
         },
         setParams: function(params) {
             for (var k in params) {
@@ -145,11 +145,11 @@
 
     function addApplet(id, params) {
         var key, applet = document.createElement('applet');
-        applet.height = JJOS.params.height;
-        applet.width = JJOS.params.width;
-        applet.archive = JJOS.params.jar;
-        applet.code = JJOS.params.code;
         applet.id = id;
+        applet.code = 'JsJavaOpenSave/JsJavaOpenSave.class';
+        applet.archive = JJOS.params.jar;
+        applet.width = JJOS.params.width;
+        applet.height = JJOS.params.height;
 
         for (key in params) {
             applet.appendChild(makeParam(key, params[key]));
@@ -174,7 +174,7 @@
     }
     
 // Support for various JS libraries
-function getHandlers(deferred) {
+function getCallbacks(deferred) {
     return {
         onComplete : function(data)        { deferred.resolve(data); },
         onProgress : function(done, total) { deferred.notify({total:total, done:done}); },
@@ -183,10 +183,17 @@ function getHandlers(deferred) {
     };
 }
 
+function setJarPath(jar) {
+    JsJavaOpenSave.setParams({
+        jar : jar
+    });
+}
+
 // Support for jQuery
 if (window.jQuery !== undefined) {
     (function($) {
         $.jjosFileAPI = {
+            setJarPath: setJarPath,
             download: function(fileName, url) {
                 var deferred = $.Deferred();
                 JsJavaOpenSave.download(fileName, url, getCallbacks(deferred));
@@ -211,6 +218,7 @@ if (window.angular !== undefined) {
     angular.module('JsJavaOpenSave', [])
     .factory('jjosFileAPI', ['$q', function($q) {
         return {
+            setJarPath: setJarPath,
             download: function(fileName, url) {
                 var deferred = $q.defer();
                 JsJavaOpenSave.download(fileName, url, getCallbacks(deferred));

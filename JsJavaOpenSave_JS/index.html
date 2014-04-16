@@ -59,9 +59,10 @@
             <button id="loadButton">Load</button>
         </form>
         
-        <script type="text/javascript" src="src/JsJavaOpenSave.js"></script>
+        <script type="text/javascript" src="JsJavaOpenSave.js"></script>
         <script type="text/javascript">
             window.onload = function() {
+                JsJavaOpenSave.setParams({jar : '/media/JsJavaOpenSave.jar'});
                 // Download
                 document.getElementById('downloadButton').onclick = function() {
                     var fileName = document.getElementById('dwnlFileName').value,
