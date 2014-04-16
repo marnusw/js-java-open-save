@@ -65,9 +65,10 @@
                 // Download
                 document.getElementById('downloadButton').onclick = function() {
                     var fileName = document.getElementById('dwnlFileName').value,
-                        url = document.getElementById('dwnlUrl').value;
+                        url = document.getElementById('dwnlUrl').value,
+                        cnt = 0;
                     JsJavaOpenSave.download(fileName, url, {
-                        onProgress : function(done, total) { console.log('Downloaded: ' + done + ' of ' + total); },
+                        onProgress : function(done, total) { console.log(++cnt + ') Downloaded: ' + done + ' of ' + total); },
                         onComplete : function() { console.log('Downloaded to: ' + fileName); },
                         onError    : function(msg) { console.log(msg); }
                     });

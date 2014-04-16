@@ -35,10 +35,10 @@ public class JsJavaOpenSave extends Applet {
     public String[][] getParameterInfo() {
         String pinfo[][] = {
             {"id",         "string", "The id of the applet element in the DOM."},
-            {"fileName",   "path",   "The full path to save the downloaded file to."},
-            {"data",       "string", "The data to write to the specified file name."},
-            {"url",        "url",    "The URL to download to the specified file name."},
-            {"bufferSize", "int",    "The size of the buffer used when reading from the TCP socket."}
+            {"fileName",   "path",   "The full path to open or save content or the downloaded file to."},
+            {"data",       "string", "The data to write to the specified file name, indicates a write if present."},
+            {"url",        "url",    "The URL to download to the specified file name, indicates download if present."},
+            {"bufferSize", "int",    "The optional size of the buffer used when reading from the TCP socket."}
         };
         return pinfo;
     }
@@ -57,6 +57,13 @@ public class JsJavaOpenSave extends Applet {
      */
     private int bufSize = 1500;
 
+    /**
+     * The applet is initialised by retrieving a JSObject instance of the window for executing
+     * JavaScript callbacks. Furthermore the HTML parameters passed into the applet are 
+     * transferred to member variables.
+     * 
+     * @throws JSException If a JSObeject for the window can't be retrieved.
+     */
     @Override
     public void init() throws JSException {
         this.window = JSObject.getWindow(this);
@@ -76,12 +83,17 @@ public class JsJavaOpenSave extends Applet {
         }
     }
 
+    /**
+     * Execution is started checking for a data parameter which triggers an immediate save operation.
+     * If no data, but a url parameter is present a download is triggered to the file name. Finally,
+     * if neither data nor a url is provided the file is read and its contents returned to the callback.
+     */
     @Override
     public void start() {
-        if (this.url != null) {
-            this.download(this.fileName, this.url);
-        } else if (this.data != null) {
+        if (this.data != null) {
             this.write(this.fileName, this.data);
+        } else if (this.url != null) {
+            this.download(this.fileName, this.url);
         } else {
             this.read(this.fileName);
         }
@@ -108,13 +120,18 @@ public class JsJavaOpenSave extends Applet {
         ) {
             byte buffer[] = new byte[this.bufSize];
             int total = resource.getContentLength(),
+                stepSize = (total/this.bufSize),
+                majorStepInterval = stepSize > 1000 ? stepSize / 1000 : 1, // max progress() calls == 1000
+                count = 0,
                 done = 0,
                 read;
             this.progress(done, total);
             while ((read = in.read(buffer, 0, this.bufSize)) >= 0) {
                 out.write(buffer);
                 done += read;
-                this.progress(done, total);
+                if (++count % majorStepInterval == 0) {
+                    this.progress(done, total);
+                }
             }
             out.close();
             in.close();
