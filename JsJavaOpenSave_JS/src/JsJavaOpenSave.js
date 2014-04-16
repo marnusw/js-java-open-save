@@ -36,10 +36,10 @@
                 JJOS.params[k] = params[k];
             }
         },
-        
+
         /**
          * Load the contents of a file from the file system using a JsJavaOpenSave applet.
-         * 
+         *
          * @param {String} fileName The full path to load file content from.
          * @param {Object} callbacks Optional onComplete(data), onProgress(done, total), onCancel(), onError(msg).
          * @return {String} A unique identifier for this operation.
@@ -53,7 +53,7 @@
         },
         /**
          * Save the contents of a buffer to a file on the file system using a JsJavaOpenSave applet.
-         * 
+         *
          * @param {String} fileName The full path of the file to save to.
          * @param {String} data The data that will be written to the file.
          * @param {Object} callbacks Optional onComplete(data), onProgress(done, total), onCancel(), onError(msg).
@@ -69,7 +69,7 @@
         },
         /**
          * Download a file from a provided URL to a specified file on disk using a JsJavaOpenSave applet.
-         * 
+         *
          * @param {String} fileName The full path to save the downloaded file to.
          * @param {String} url The URL to download to the specified file name.
          * @param {Object} callbacks Optional onComplete(data), onProgress(done, total), onCancel(), onError(msg).
@@ -85,13 +85,13 @@
         },
         /**
          * Cancel an operation by providing the previously returned id of that operation.
-         * 
+         *
          * @param {String} id
          */
         cancel: function(id) {
             JJOS.onCancel(id);
         },
-        
+
         onComplete: function(id, data) {
             if (queue[id]) {
                 queue[id].complete(data);
@@ -157,14 +157,14 @@
 
         document.body.appendChild(applet);
     }
-    
+
     function makeParam(key, value) {
         var param = document.createElement('param');
         param.name = key;
         param.value = value;
         return param;
     }
-    
+
     function removeApplet(id) {
         if (queue[id]) {
             delete queue[id];
@@ -172,19 +172,62 @@
             el.parentNode.removeChild(el);
         }
     }
-})();
+    
+// Support for various JS libraries
+function getHandlers(deferred) {
+    return {
+        onComplete : function(data)        { deferred.resolve(data); },
+        onProgress : function(done, total) { deferred.notify({total:total, done:done}); },
+        onCancel   : function()            { deferred.reject('Cancelled'); },
+        onError    : function(msg)         { deferred.reject(msg); }
+    };
+}
 
 // Support for jQuery
 if (window.jQuery !== undefined) {
     (function($) {
-        $.fn.downloadify = function(options) {
-            return this.each(function() {
-                options = $.extend({}, JsJavaOpenSave.defaultOptions, options);
-                var dl = JsJavaOpenSave.create(this, options);
-                $(this).data('JsJavaOpenSave', dl);
-            });
+        $.jjosFileAPI = {
+            download: function(fileName, url) {
+                var deferred = $.Deferred();
+                JsJavaOpenSave.download(fileName, url, getCallbacks(deferred));
+                return deferred.promise();
+            },
+            save: function(fileName, data) {
+                var deferred = $.Deferred();
+                JsJavaOpenSave.save(fileName, data, getCallbacks(deferred));
+                return deferred.promise();
+            },
+            load: function(fileName) {
+                var deferred = $.Deferred();
+                JsJavaOpenSave.load(fileName, getCallbacks(deferred));
+                return deferred.promise();
+            }
         };
     })(jQuery);
 }
 
 // Support for AngularJS
+if (window.angular !== undefined) {
+    angular.module('JsJavaOpenSave', [])
+    .factory('jjosFileAPI', ['$q', function($q) {
+        return {
+            download: function(fileName, url) {
+                var deferred = $q.defer();
+                JsJavaOpenSave.download(fileName, url, getCallbacks(deferred));
+                return deferred.promise;
+            },
+            save: function(fileName, data) {
+                var deferred = $q.defer();
+                JsJavaOpenSave.save(fileName, data, getCallbacks(deferred));
+                return deferred.promise;
+            },
+            load: function(fileName) {
+                var deferred = $q.defer();
+                JsJavaOpenSave.load(fileName, getCallbacks(deferred));
+                return deferred.promise;
+            }
+        }
+    }]);
+}
+    
+})();
