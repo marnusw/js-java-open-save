@@ -215,7 +215,7 @@ if (window.jQuery !== undefined) {
 
 // Support for AngularJS
 if (window.angular !== undefined) {
-    angular.module('JsJavaOpenSave', [])
+    angular.module('jsJavaOpenSave', [])
     .factory('jjosFileAPI', ['$q', function($q) {
         return {
             setJarPath: setJarPath,
