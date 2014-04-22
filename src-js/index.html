@@ -59,6 +59,15 @@
             <button id="loadButton">Load</button>
         </form>
         
+        <br /><hr />
+        <h2>Choose a folder</h2>
+        <form>
+            <p>
+                <label for="chooseFolder">Click to select a folder</label><br />
+                <input type="text" name="chooseFolder" value="C:\Users\marnusw\Downloads" id="chooseFolder" />
+            </p>
+        </form>
+                
         <script type="text/javascript" src="js-java-open-save.js"></script>
         <script type="text/javascript">
             window.onload = function() {
@@ -96,6 +105,13 @@
                         onError : function(msg) { console.log(msg); }
                     });
                     return false;
+                };
+                // Choose folder
+                document.getElementById('chooseFolder').onclick = function() {
+                    var folderPath = JsJavaOpenSave.chooseFolder(this.value);
+                    if (folderPath) {
+                        this.value = folderPath;
+                    }
                 };
             };
         </script>

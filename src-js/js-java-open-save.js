@@ -38,6 +38,21 @@
         },
 
         /**
+         * Open a file dialogue to select a folder from the local file system. If the file
+         * dialogue is closed without selecting a folder an empty string is returned.
+         * 
+         * @param {String} initialPath An initial folder to start the file dialogue in.
+         * @returns {String} The absolute path of the chosen folder.
+         */
+        chooseFolder: function(initialPath) {
+            var data = {initialPath : initialPath || ''},
+                id = 'JJOS_chooseFolder_applet';
+            addApplet(id, {}, 'JsJavaOpenSave/JsJavaFileChooser.class');
+            document.getElementById('JJOS_chooseFolder_applet').chooseFolder(data);
+            removeApplet(id);
+            return data.chosenFolder;
+        },
+        /**
          * Load the contents of a file from the file system using a JsJavaOpenSave applet.
          *
          * @param {String} fileName The full path to load file content from.
@@ -143,13 +158,14 @@
         init();
     };
 
-    function addApplet(id, params) {
+    function addApplet(id, params, code) {
         var key, applet = document.createElement('applet');
         applet.id = id;
-        applet.code = 'JsJavaOpenSave/JsJavaOpenSave.class';
+        applet.code = code || 'JsJavaOpenSave/JsJavaOpenSave.class';
         applet.archive = JJOS.params.jar;
         applet.width = JJOS.params.width;
         applet.height = JJOS.params.height;
+        applet.mayscript = 'true';
 
         for (key in params) {
             applet.appendChild(makeParam(key, params[key]));
@@ -166,11 +182,9 @@
     }
 
     function removeApplet(id) {
-        if (queue[id]) {
-            delete queue[id];
-            var el = document.getElementById(id);
-            el.parentNode.removeChild(el);
-        }
+        queue[id] && (delete queue[id]);
+        var el = document.getElementById(id);
+        el && el.parentNode.removeChild(el);
     }
     
 // Support for various JS libraries
