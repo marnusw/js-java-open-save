@@ -21,6 +21,7 @@
  */
 package JsJavaOpenSave;
 
+import javax.swing.JFileChooser;
 import java.applet.Applet;
 import java.io.*;
 
@@ -96,11 +97,32 @@ public class JsJavaOpenSave extends Applet {
             this.write(this.fileName, this.data);
         } else if (this.url != null) {
             this.download(this.fileName, this.url);
-        } else {
+        } else if (this.fileName != null) {
             this.read(this.fileName);
         }
     }
 
+    /**
+     * Open a file dialogue to select a folder from the local file system. If the file
+     * dialogue is closed without selecting a folder an empty string is returned.
+     *
+     * @param params Parameters: initialPath (in), chosenFolder (out).
+     */
+    public void chooseFolder(JSObject params) {
+        Object member = params.getMember("initialPath");
+        String initialPath = member != null ? (String) member : "";
+        
+        File currentDirectory = new File(initialPath);
+        JFileChooser chooser = new JFileChooser(currentDirectory);
+        chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+        chooser.setDialogTitle("Select a download target folder");
+
+        int result = chooser.showDialog(null, "Choose folder");
+        params.setMember("chosenFolder",
+                result == JFileChooser.APPROVE_OPTION ? chooser.getSelectedFile().getAbsolutePath() : ""
+        );
+    }
+    
     /**
      * Download a file from a provided URL to a specified file on disk. The buffer size
      * used when reading from the TCP socket can also specified.

@@ -47,8 +47,8 @@
         chooseFolder: function(initialPath) {
             var data = {initialPath : initialPath || ''},
                 id = 'JJOS_chooseFolder_applet';
-            addApplet(id, {}, 'JsJavaOpenSave/JsJavaFileChooser.class');
-            document.getElementById('JJOS_chooseFolder_applet').chooseFolder(data);
+            addApplet(id, {});
+            document.getElementById(id).chooseFolder(data);
             removeApplet(id);
             return data.chosenFolder;
         },
@@ -237,6 +237,13 @@ if (window.jQuery !== undefined) {
 // Support for AngularJS
 if (window.angular !== undefined) {
     angular.module('jsJavaOpenSave', [])
+    
+    .factory('fileDialogue', function() {
+        return {
+            chooseFolder: JsJavaOpenSave.chooseFolder
+        };
+    })
+    
     .factory('jjosFileAPI', ['$q', function($q) {
         var lastId;
         return {
