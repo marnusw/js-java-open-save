@@ -155,7 +155,7 @@ public class JsJavaOpenSave extends Applet {
             }
             this.progress(done, total);
             while ((read = in.read(buffer, 0, this.bufSize)) >= 0) {
-                out.write(buffer);
+                out.write(buffer, 0, read);
                 done += read;
                 if (++count % progressFilter == 0) {
                     this.progress(done, total);
