@@ -25,6 +25,9 @@ import javax.swing.JFileChooser;
 import java.applet.Applet;
 import java.io.*;
 
+import java.net.URL;
+import java.net.URLConnection;
+
 // For this import to resolve include jre\lib\plugin.jar as a compile-time library of the project.
 import netscape.javascript.JSObject;
 import netscape.javascript.JSException;
@@ -53,9 +56,10 @@ public class JsJavaOpenSave extends Applet {
     private String data;
     private String url;
     /**
-     * By default a download is started with a 1500 bytes buffer size, the default Ethernet MTU.
+     * By default a download is started with a 2MB bytes buffer size. The largest
+     * amount of data typically read is just over 1MB, so this provides ample space.
      */
-    private int bufSize = 1500;
+    private int bufSize = 2*1024*1024;
 
     /**
      * The applet is initialised by retrieving a JSObject instance of the window for executing
@@ -109,17 +113,16 @@ public class JsJavaOpenSave extends Applet {
      * @param params Parameters: initialPath (in), chosenFolder (out).
      */
     public void chooseFolder(JSObject params) {
-        Object member = params.getMember("initialPath");
-        String initialPath = member != null ? (String) member : "";
+        Object initialPath = params.getMember("initialPath");
+        JFileChooser chooser = initialPath == null ? new JFileChooser() 
+                                                   : new JFileChooser(new File((String)initialPath));
         
-        File currentDirectory = new File(initialPath);
-        JFileChooser chooser = new JFileChooser(currentDirectory);
         chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
         chooser.setDialogTitle("Select a download target folder");
 
         int result = chooser.showDialog(null, "Choose folder");
         params.setMember("chosenFolder",
-                result == JFileChooser.APPROVE_OPTION ? chooser.getSelectedFile().getAbsolutePath() : ""
+            result == JFileChooser.APPROVE_OPTION ? chooser.getSelectedFile().getAbsolutePath() : ""
         );
     }
     
@@ -131,36 +134,46 @@ public class JsJavaOpenSave extends Applet {
      * @param url The URL to download to the specified file name.
      */
     public void download(String fileName, String url) {
-        java.net.URLConnection resource;
+        URLConnection resource;
         try {
-            resource = new java.net.URL(url).openConnection();
+            resource = new URL(url).openConnection();
         } catch (IOException ioe) {
             this.error(ioe.getMessage());
             return;
         }
         try (
-                BufferedInputStream in = new BufferedInputStream(resource.getInputStream());
+            BufferedInputStream in = new BufferedInputStream(resource.getInputStream());
             BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(new File(fileName)), this.bufSize);
         ) {
             byte buffer[] = new byte[this.bufSize];
-            int total = resource.getContentLength(),
-                    progressFilter = 100, // Call progress every 150 KB by default
-                    count = 0,
-                    done = 0,
-                    read;
-            if (total > 100000000) {
-                progressFilter = 600 * 1000 / this.bufSize; // Call progress every 600 KB
-            } else if (total > 1000000) {
-                progressFilter = 90 * 1000 / this.bufSize; // Call progress every 90 KB
-            }
-            this.progress(done, total);
-            while ((read = in.read(buffer, 0, this.bufSize)) >= 0) {
-                out.write(buffer, 0, read);
-                done += read;
-                if (++count % progressFilter == 0) {
-                    this.progress(done, total);
+            int contentLength = resource.getContentLength(),
+                prevTotal = 0,
+                total = 0,
+                count;
+            
+            this.progress(0, 0, contentLength);
+            int shortInterval = 500; // ms
+            int longInterval = 1000; // ms
+            double rate = 0.0;
+            
+            long endTime, longStartTime, shortStartTime = System.nanoTime() / 1000000;
+            longStartTime = shortStartTime;
+            
+            while ((count = in.read(buffer)) != -1) {
+                endTime = System.nanoTime() / 1000000;
+                total += count;
+                if (endTime - shortStartTime > shortInterval) {
+                    if (endTime - longStartTime > longInterval) {
+                        rate = (total - prevTotal)/(endTime - shortStartTime)*1000;
+                        longStartTime = endTime;
+                    }
+                    this.progress(rate, total, contentLength);
+                    shortStartTime = endTime;
+                    prevTotal = total;
                 }
+                out.write(buffer, 0, count);
             }
+            
             out.close();
             in.close();
             this.complete();
@@ -228,11 +241,12 @@ public class JsJavaOpenSave extends Applet {
     /**
      * Periodic call back to the JavaScript code to report progress on a long-running task.
      *
+     * @param bps The download speed in bytes per second.
      * @param done The amount of work that has been done.
      * @param total The total amount of work to be done.
      */
-    private void progress(int done, int total) {
-        this.callJS("onProgress", quote(this.id) + "," + done + "," + total);
+    private void progress(double bps, int done, int total) {
+        this.callJS("onProgress", quote(this.id) + "," + bps + "," + done + "," + total);
     }
     /**
      * Call back to the JavaScript code when an operation is completed.

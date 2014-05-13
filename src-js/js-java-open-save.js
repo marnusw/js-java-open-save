@@ -112,9 +112,9 @@
                 queue[id].complete(data);
             }
         },
-        onProgress: function(id, done, total) {
+        onProgress: function(id, bps, done, total) {
             if (queue[id]) {
-                queue[id].progress(done, total);
+                queue[id].progress(bps, done, total);
             }
         },
         onCancel: function(id) {
@@ -143,8 +143,8 @@
             typeof(base.callbacks.onComplete) === "function" && base.callbacks.onComplete(data);
             removeApplet(base.id);
         };
-        base.progress = function(done, total) {
-            typeof(base.callbacks.onProgress) === "function" && base.callbacks.onProgress(done, total);
+        base.progress = function(bps, done, total) {
+            typeof(base.callbacks.onProgress) === "function" && base.callbacks.onProgress(bps, done, total);
         };
         base.cancel = function() {
             typeof(base.callbacks.onCancel) === "function" && base.callbacks.onCancel();
@@ -190,10 +190,10 @@
 // Support for various JS libraries
 function getCallbacks(deferred) {
     return {
-        onComplete : function(data)        { deferred.resolve(data); },
-        onProgress : function(done, total) { deferred.notify({total:total, done:done}); },
-        onCancel   : function()            { deferred.reject('Cancelled'); },
-        onError    : function(msg)         { deferred.reject(msg); }
+        onComplete : function(data)             { deferred.resolve(data); },
+        onProgress : function(bps, done, total) { deferred.notify({total:total, done:done, bps:bps}); },
+        onCancel   : function()                 { deferred.reject('Cancelled'); },
+        onError    : function(msg)              { deferred.reject(msg); }
     };
 }
 
