@@ -53,9 +53,9 @@ public class JsJavaOpenSave extends Applet {
     private JSObject window;
 
     private String id;
-    private String fileName;
-    private String data;
-    private String url;
+//    private String fileName;
+//    private String data;
+//    private String url;
     /**
      * By default a download is started with a 2MB bytes buffer size. The largest amount of data typically read is just
      * over 1MB, so this provides ample space.
@@ -76,9 +76,6 @@ public class JsJavaOpenSave extends Applet {
         this.window = JSObject.getWindow(this);
 
         this.id = this.getParameter("id");
-        this.fileName = this.getParameter("fileName");
-        this.data = this.getParameter("data");
-        this.url = this.getParameter("url");
 
         String bufSizeStr = this.getParameter("bufferSize");
         if (bufSizeStr != null) {
@@ -91,83 +88,39 @@ public class JsJavaOpenSave extends Applet {
      * url parameter is present a download is triggered to the file name. Finally, if neither data nor a url is provided
      * the file is read and its contents returned to the callback.
      */
-    @Override
-    public void start() {
-        if (this.data != null) {
-            this.write(this.fileName, this.data);
-        } else if (this.url != null) {
-            this.download(this.fileName, this.url);
-        } else if (this.fileName != null) {
-            this.read(this.fileName);
-        }
-    }
+//    @Override
+//    public void start() {
+//        if (this.data != null) {
+//            this.write(this.fileName, this.data);
+//        } else if (this.url != null) {
+//            this.download(this.fileName, this.url);
+//        } else if (this.fileName != null) {
+//            this.read(this.fileName);
+//        }
+//    }
 
     /**
-     * Open a file dialogue to select a folder from the local file system. If the file dialogue is closed without
-     * selecting a folder an empty string is returned.
+     * Open a file dialogue to select a folder from the local file system. 
+     * If the file dialogue is closed without selecting a folder an empty 
+     * string is returned.
      *
      * @param params Parameters: initialPath (in), chosenFolder (out).
      */
     public void chooseFolder(JSObject params) {
-        Object initialPath = params.getMember("initialPath");
-        String folder = (String)AccessController.doPrivileged(new ChooseFolderAction((String)initialPath));
+        String folder = AccessController.doPrivileged(new ChooseFolderAction((String)params.getMember("initialPath")));
         params.setMember("chosenFolder", folder);
     }
 
     /**
-     * Download a file from a provided URL to a specified file on disk. The buffer size used when reading from the TCP
-     * socket can also specified.
+     * Download a file from a provided URL to a specified file on disk. The 
+     * buffer size used when reading from the TCP socket can also specified.
      *
-     * @param fileName The full path to save the downloaded file to.
-     * @param url The URL to download to the specified file name.
+     * @param params Parameters: fileName (in), url (in).
      */
-    public void download(String fileName, String url) {
-        URLConnection resource;
-        try {
-            resource = new URL(url).openConnection();
-        } catch (IOException ioe) {
-            this.error(ioe.getMessage());
-            return;
-        }
-        try (
-            BufferedInputStream in = new BufferedInputStream(resource.getInputStream());
-            OutputStream out = new FileOutputStream(new File(fileName));
-        ) {
-            byte buffer[] = new byte[this.bufSize];
-            int contentLength = resource.getContentLength(),
-                    prevTotal = 0,
-                    total = 0,
-                    count;
-
-            this.progress(0, 0, contentLength);
-            int shortInterval = 500; // ms
-            int longInterval = 1000; // ms
-            double rate = 0.0;
-
-            long endTime, longStartTime, shortStartTime = System.nanoTime() / 1000000;
-            longStartTime = shortStartTime;
-
-            while ((count = in.read(buffer)) != -1) {
-                endTime = System.nanoTime() / 1000000;
-                total += count;
-                if (endTime - shortStartTime > shortInterval) {
-                    if (endTime - longStartTime > longInterval) {
-                        rate = (total - prevTotal) / (endTime - shortStartTime) * 1000;
-                        longStartTime = endTime;
-                    }
-                    this.progress(rate, total, contentLength);
-                    shortStartTime = endTime;
-                    prevTotal = total;
-                }
-                out.write(buffer, 0, count);
-            }
-
-            out.close();
-            in.close();
-            this.complete();
-        } catch (IOException ioe) {
-            this.error(ioe.getMessage());
-        }
+    public void download(JSObject params) {
+        String fileName = (String)params.getMember("fileName");
+        String url = (String)params.getMember("url");
+        AccessController.doPrivileged(new DownloadToFileAction(this, url, fileName, this.bufSize));
     }
 
     /**
@@ -213,16 +166,16 @@ public class JsJavaOpenSave extends Applet {
     /**
      * Call back to the JavaScript code when an operation is completed.
      */
-    private void complete() {
+    public void complete() {
         this.callJS("onComplete", quote(this.id));
     }
 
     /**
      * Call back to the JavaScript code when an operation is completed with data.
      *
-     * @param data Data to pass back to the
+     * @param data Data to pass to the JavaScript code.
      */
-    private void complete(String data) {
+    public void complete(String data) {
         this.callJS("onComplete", quote(this.id) + "," + quote(data));
     }
 
@@ -233,31 +186,27 @@ public class JsJavaOpenSave extends Applet {
      * @param done The amount of work that has been done.
      * @param total The total amount of work to be done.
      */
-    private void progress(double bps, int done, int total) {
+    public void progress(double bps, int done, int total) {
         this.callJS("onProgress", quote(this.id) + "," + bps + "," + done + "," + total);
     }
 
     /**
-     * Call back to the JavaScript code when an operation is completed.
+     * Call back to the JavaScript code when an error occurs.
      *
-     * @param data Data to pass back to the
+     * @param msg The error message.
      */
-    private void error(String msg) {
+    public void error(String msg) {
         this.callJS("onError", quote(this.id) + "," + quote("Java Error: " + msg));
     }
 
     /**
      * Add single quotes around a string so it can be used in an eval() statement as a JavaScript string.
      *
-     * @param str
-     * @return
+     * @param str A string to place single quotes around.
+     * @return The single quoted string.
      */
     private String quote(String str) {
         return "'" + str + "'";
-    }
-
-    private void log(String str) {
-        this.window.eval("console.log(" + quote(str) + ")");
     }
 
     /**
