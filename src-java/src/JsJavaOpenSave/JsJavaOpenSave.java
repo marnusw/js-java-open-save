@@ -134,8 +134,9 @@ public class JsJavaOpenSave extends Applet {
             return;
         }
         try (
-                BufferedInputStream in = new BufferedInputStream(resource.getInputStream());
-                BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(new File(fileName)), this.bufSize);) {
+            BufferedInputStream in = new BufferedInputStream(resource.getInputStream());
+            OutputStream out = new FileOutputStream(new File(fileName));
+        ) {
             byte buffer[] = new byte[this.bufSize];
             int contentLength = resource.getContentLength(),
                     prevTotal = 0,
