@@ -92,10 +92,11 @@
          */
         download: function(fileName, url, callbacks) {
             if (fileName && url) {
-                return new JJOS.Applet({
+                var id = new JJOS.Applet({}, callbacks).id;
+                document.getElementById(id).download({
                     fileName : fileName,
                     url : url
-                }, callbacks).id;
+                });
             }
         },
         /**
@@ -157,6 +158,15 @@
 
         init();
     };
+
+    function getApplet() {
+        var id = 'JJOS_applet',
+            applet = document.getElementById(id);
+        if (!applet) {
+            addApplet(id, {});
+        }
+        return applet ? applet : document.getElementById(id);
+    }
 
     function addApplet(id, params, code) {
         var key, applet = document.createElement('applet');
