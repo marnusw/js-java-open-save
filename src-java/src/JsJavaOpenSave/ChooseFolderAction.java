@@ -1,8 +1,4 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
+
 package JsJavaOpenSave;
 
 import java.security.PrivilegedAction;
@@ -11,10 +7,13 @@ import java.io.File;
 import javax.swing.JFileChooser;
 
 /**
+ * Open a file dialogue to select a folder from the local file system.
+ * If the file dialogue is closed without selecting a folder an empty 
+ * string is returned.
  *
  * @author marnusw
  */
-public class ChooseFolderAction implements PrivilegedAction {
+public class ChooseFolderAction implements PrivilegedAction<String> {
 
     private final String initialPath;
 
@@ -27,7 +26,7 @@ public class ChooseFolderAction implements PrivilegedAction {
     }
 
     @Override
-    public Object run() {
+    public String run() {
         JFileChooser chooser = initialPath == null ? new JFileChooser() 
                                                    : new JFileChooser(new File((String)initialPath));
         
