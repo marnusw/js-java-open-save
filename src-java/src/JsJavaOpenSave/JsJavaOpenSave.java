@@ -77,10 +77,6 @@ public class JsJavaOpenSave extends Applet {
 
         this.id = this.getParameter("id");
         this.fileName = this.getParameter("fileName");
-        if (this.id == null || this.fileName == null) {
-            this.error("ERROR: The id and fileName parameters are required by the JsJavaOpenSave applet.");
-        }
-
         this.data = this.getParameter("data");
         this.url = this.getParameter("url");
 
