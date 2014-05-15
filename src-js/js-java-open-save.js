@@ -292,16 +292,16 @@ if (window.angular !== undefined) {
     angular.module('jsJavaOpenSave', [])
     
     .factory('fileDialogue', function() {
-        JsJavaOpenSave.preLoadApplet();
         return {
+            preLoadApplet: JsJavaOpenSave.preLoadApplet,
             chooseFolder: JsJavaOpenSave.chooseFolder
         };
     })
     
     .factory('jjosFileAPI', ['$q', function($q) {
-        JsJavaOpenSave.preLoadApplet();
         var lastId;
         return {
+            preLoadApplet: JsJavaOpenSave.preLoadApplet,
             setUpdateInterval: setUpdateInterval,
             setJarPath: setJarPath,
             getDownloadId: function() {
