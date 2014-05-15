@@ -120,10 +120,13 @@
         clearInterval(statusTimer);
         
         var id, applet = getApplet(),
+            checkAgain = false,
             remove = {};
         for (id in downloads) {
             if (updateProgress(id, applet)) {
                 remove[id] = true;
+            } else {
+                checkAgain = true;
             }
         }
         
@@ -131,7 +134,7 @@
             delete downloads[id];
         }
         
-        if (downloads.length) {
+        if (checkAgain) {
             statusTimer = setInterval(checkStatus, JJOS.params.statusUpdateInterval);
         }
     }
