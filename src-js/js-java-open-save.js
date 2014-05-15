@@ -41,10 +41,10 @@
         
         /**
          * Can be used to download the applet from the server on page load so it will be
-         * ready when the first action using it is initiated.
+         * ready when the first action using it is initiated. The operation is asynchronous.
          */
         preLoadApplet: function() {
-            getApplet();
+            setTimeout(getApplet, 1);
         },
         /**
          * Open a file dialogue to select a folder from the local file system. If the file
