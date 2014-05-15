@@ -74,9 +74,10 @@
                         url : url
                     };
                 applet.newDownload(params);
-                downloads[params.id] = new Download(params.id, callbacks);
+                downloads[params.id] = new Operation(callbacks);
                 applet.startDownload(params);
                 checkStatus();
+                return params.id;
             }
         },
         /**
@@ -260,7 +261,7 @@ if (window.jQuery !== undefined) {
             preLoadApplet: JsJavaOpenSave.preLoadApplet,
             setUpdateInterval: setUpdateInterval,
             setJarPath: setJarPath,
-            getOpId: function() {
+            getDownloadId: function() {
                 return lastId;
             },
             download: function(fileName, url) {
@@ -302,7 +303,7 @@ if (window.angular !== undefined) {
         return {
             setUpdateInterval: setUpdateInterval,
             setJarPath: setJarPath,
-            getOpId: function() {
+            getDownloadId: function() {
                 return lastId;
             },
             download: function(fileName, url) {
