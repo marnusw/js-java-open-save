@@ -66,7 +66,7 @@ public class JsJavaOpenSave extends Applet {
         String url = (String)params.getMember("url");
         int id = this.nextId();
         this.downloads.put(id, new DownloadStatus(fileName, url));
-        params.setMember("id", id);
+        params.setMember("id", Integer.toString(id));
     }
     
     /**
@@ -76,13 +76,13 @@ public class JsJavaOpenSave extends Applet {
      * @param params Parameters: id (in), started (out)
      */
     public void startDownload(JSObject params) {
-        int id = (int)params.getMember("id");
+        int id = Integer.parseInt((String)params.getMember("id"));
         DownloadStatus download = this.downloads.get(id);
         if (download == null) {
-            params.setMember("started", false);
+            params.setMember("started", "");
         } else {
             AccessController.doPrivileged(new StartThread(new DownloadToFileAction(download)));
-            params.setMember("started", true);
+            params.setMember("started", "true");
         }
     }
     
@@ -94,7 +94,7 @@ public class JsJavaOpenSave extends Applet {
      *      bps (out), progress (out), total (out), isDone (out), isCancelled (out), error (out)
      */
     public void getDownloadStatus(JSObject params) {
-        int id = (int)params.getMember("id");
+        int id = Integer.parseInt((String)params.getMember("id"));
         
         DownloadStatus download = this.downloads.get(id);
         if (download == null) {
@@ -106,12 +106,12 @@ public class JsJavaOpenSave extends Applet {
             this.downloads.remove(id);
         }
         
-        params.setMember("isDone", download.isDone());
-        params.setMember("isCancelled", download.isCancelled());
-        params.setMember("error", download.getError());
-        params.setMember("bps", download.getBps());
-        params.setMember("progress", download.getProgress());
-        params.setMember("total", download.getTotalSize());
+        params.setMember("isDone", download.isDone() ? "true" : "");
+        params.setMember("isCancelled", download.isCancelled() ? "true" : "");
+        params.setMember("error", download.hasError() ? download.getError() : "");
+        params.setMember("bps", Double.toString(download.getBps()));
+        params.setMember("progress", Integer.toString(download.getProgress()));
+        params.setMember("total", Integer.toString(download.getTotalSize()));
     }
     
     /**
@@ -121,7 +121,7 @@ public class JsJavaOpenSave extends Applet {
      * @param params Parameters: id (in)
      */
     public void cancelDownload(JSObject params) {
-        int id = (int)params.getMember("id");
+        int id = Integer.parseInt((String)params.getMember("id"));
         DownloadStatus download = this.downloads.get(id);
         if (download != null) {
             download.cancel();

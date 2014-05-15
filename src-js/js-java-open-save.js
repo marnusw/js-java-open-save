@@ -152,7 +152,7 @@
         } else if (params.error) {
             downloads[id].error(params.error);
         } else {
-            downloads[id].progress(params.bps, params.progress, params.total);
+            downloads[id].progress(parseFloat(params.bps), parseInt(params.progress), parseInt(params.total));
             return false;
         }
         return true;
