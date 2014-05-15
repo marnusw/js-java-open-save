@@ -47,12 +47,9 @@
          * @returns {String} The absolute path of the chosen folder.
          */
         chooseFolder: function(initialPath) {
-            var data = {initialPath : initialPath || ''},
-                id = 'JJOS_chooseFolder_applet';
-            addApplet(id, {});
-            document.getElementById(id).chooseFolder(data);
-            removeDownload(id);
-            return data.chosenFolder;
+            var params = {initialPath : initialPath || ''};
+            getApplet().chooseFolder(params);
+            return params.chosenFolder;
         },
         /**
          * Load the contents of a file from the file system using a JsJavaOpenSave applet.
