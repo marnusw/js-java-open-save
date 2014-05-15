@@ -27,7 +27,7 @@
 
     var JJOS = window.JsJavaOpenSave = {
         params: {
-            statusUpdateInterval : 250,
+            statusUpdateInterval : 125,
             code:   'JsJavaOpenSave/JsJavaOpenSave.class',
             jar:    '/lib/js-java-open-save/JsJavaOpenSave.jar',
             height: '200',
@@ -229,11 +229,18 @@ function setJarPath(jar) {
     });
 }
 
+function setUpdateInterval(interval) {
+    JsJavaOpenSave.setParams({
+        statusUpdateInterval : interval
+    });
+}
+
 // Support for jQuery
 if (window.jQuery !== undefined) {
     (function($) {
         var lastId;
         $.jjosFileAPI = {
+            setUpdateInterval: setUpdateInterval,
             setJarPath: setJarPath,
             getOpId: function() {
                 return lastId;
@@ -273,6 +280,7 @@ if (window.angular !== undefined) {
     .factory('jjosFileAPI', ['$q', function($q) {
         var lastId;
         return {
+            setUpdateInterval: setUpdateInterval,
             setJarPath: setJarPath,
             getOpId: function() {
                 return lastId;
