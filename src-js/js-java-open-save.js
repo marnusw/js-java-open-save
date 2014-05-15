@@ -38,7 +38,14 @@
                 JJOS.params[k] = params[k];
             }
         },
-
+        
+        /**
+         * Can be used to download the applet from the server on page load so it will be
+         * ready when the first action using it is initiated.
+         */
+        preLoadApplet: function() {
+            getApplet();
+        },
         /**
          * Open a file dialogue to select a folder from the local file system. If the file
          * dialogue is closed without selecting a folder an empty string is returned.
@@ -210,9 +217,6 @@
         return param;
     }
 
-// Load the applet initially
-getApplet();
-
 // Support for various JS libraries
 function getCallbacks(deferred) {
     return {
@@ -240,6 +244,7 @@ if (window.jQuery !== undefined) {
     (function($) {
         var lastId;
         $.jjosFileAPI = {
+            preLoadApplet: JsJavaOpenSave.preLoadApplet,
             setUpdateInterval: setUpdateInterval,
             setJarPath: setJarPath,
             getOpId: function() {
@@ -272,12 +277,14 @@ if (window.angular !== undefined) {
     angular.module('jsJavaOpenSave', [])
     
     .factory('fileDialogue', function() {
+        JsJavaOpenSave.preLoadApplet();
         return {
             chooseFolder: JsJavaOpenSave.chooseFolder
         };
     })
     
     .factory('jjosFileAPI', ['$q', function($q) {
+        JsJavaOpenSave.preLoadApplet();
         var lastId;
         return {
             setUpdateInterval: setUpdateInterval,
