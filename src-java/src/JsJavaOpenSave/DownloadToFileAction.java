@@ -2,8 +2,7 @@
 package JsJavaOpenSave;
 
 import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.security.PrivilegedAction;
+import java.io.OutputStream;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -15,48 +14,42 @@ import java.net.URLConnection;
  *
  * @author marnusw
  */
-public class DownloadToFileAction implements PrivilegedAction {
+public class DownloadToFileAction implements Runnable {
 
-    private final JsJavaOpenSave jjos;
-    private final String url;
-    private final String fileName;
-    private final int bufSize;
+    private final int bufSize = 2*1024*1024;
+    private final DownloadStatus status;
 
-    public DownloadToFileAction(JsJavaOpenSave jjos, String url, String fileName, int bufferSize) {
-        this.jjos = jjos;
-        this.url = url;
-        this.fileName = fileName;
-        this.bufSize = bufferSize;
+    public DownloadToFileAction(DownloadStatus status) {
+        this.status = status;
     }
 
     @Override
-    public Object run() {
+    public void run() {
         URLConnection resource;
         try {
-            resource = new URL(url).openConnection();
+            resource = new URL(this.status.getUrl()).openConnection();
         } catch (IOException ioe) {
-            this.jjos.error(ioe.getMessage());
-            return null;
+            this.status.error(ioe.getMessage());
+            return;
         }
         try (
             BufferedInputStream in = new BufferedInputStream(resource.getInputStream());
-            BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(new File(fileName)), this.bufSize);
+            OutputStream out = new FileOutputStream(new File(this.status.getFileName()));
         ) {
             byte buffer[] = new byte[this.bufSize];
-            int contentLength = resource.getContentLength(),
-                    prevTotal = 0,
-                    total = 0,
-                    count;
+            int shortInterval = 500, // ms
+                longInterval = 1000, // ms
+                prevTotal = 0,
+                total = 0,
+                count;
 
-            this.jjos.progress(0, 0, contentLength);
-            int shortInterval = 500; // ms
-            int longInterval = 1000; // ms
+            this.status.setTotalSize(resource.getContentLength());
             double rate = 0.0;
 
             long endTime, longStartTime, shortStartTime = System.nanoTime() / 1000000;
             longStartTime = shortStartTime;
 
-            while ((count = in.read(buffer)) != -1) {
+            while ((count = in.read(buffer)) != -1 && this.status.notCancelled()) {
                 endTime = System.nanoTime() / 1000000;
                 total += count;
                 if (endTime - shortStartTime > shortInterval) {
@@ -64,7 +57,7 @@ public class DownloadToFileAction implements PrivilegedAction {
                         rate = (total - prevTotal) / (endTime - shortStartTime) * 1000;
                         longStartTime = endTime;
                     }
-                    this.jjos.progress(rate, total, contentLength);
+                    this.status.progress(rate, total);
                     shortStartTime = endTime;
                     prevTotal = total;
                 }
@@ -73,10 +66,12 @@ public class DownloadToFileAction implements PrivilegedAction {
 
             out.close();
             in.close();
-            this.jjos.complete();
+            
+            if (this.status.notCancelled()) {
+                this.status.completed();
+            }
         } catch (IOException ioe) {
-            this.jjos.error(ioe.getMessage());
+            this.status.error(ioe.getMessage());
         }
-        return null;
     }
 }

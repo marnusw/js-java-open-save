@@ -21,15 +21,17 @@
  */
 
 (function() {
-    var queue = {},
-        uid = 0;
+    var appletId = 'JsJavaOpenSave_Applet',
+        downloads = {},
+        statusTimer;
 
     var JJOS = window.JsJavaOpenSave = {
         params: {
+            statusUpdateInterval : 250,
             code:   'JsJavaOpenSave/JsJavaOpenSave.class',
             jar:    '/lib/js-java-open-save/JsJavaOpenSave.jar',
-            height: '1',
-            width:  '1'
+            height: '200',
+            width:  '200'
         },
         setParams: function(params) {
             for (var k in params) {
@@ -49,7 +51,7 @@
                 id = 'JJOS_chooseFolder_applet';
             addApplet(id, {});
             document.getElementById(id).chooseFolder(data);
-            removeApplet(id);
+            removeDownload(id);
             return data.chosenFolder;
         },
         /**
@@ -92,98 +94,115 @@
          */
         download: function(fileName, url, callbacks) {
             if (fileName && url) {
-                var id = new JJOS.Applet({}, callbacks).id;
-                document.getElementById(id).download({
-                    fileName : fileName,
-                    url : url
-                });
+                var applet = getApplet(),
+                    params = {
+                        fileName : fileName,
+                        url : url
+                    };
+                applet.newDownload(params);
+                downloads[params.id] = new Download(params.id, callbacks);
+                applet.startDownload(params);
+                checkStatus();
             }
         },
         /**
-         * Cancel an operation by providing the previously returned id of that operation.
+         * Cancel a download by providing the previously returned id of that operation.
          *
          * @param {String} id
          */
         cancel: function(id) {
-            JJOS.onCancel(id);
-        },
-
-        onComplete: function(id, data) {
-            if (queue[id]) {
-                queue[id].complete(data);
-            }
-        },
-        onProgress: function(id, bps, done, total) {
-            if (queue[id]) {
-                queue[id].progress(bps, done, total);
-            }
-        },
-        onCancel: function(id) {
-            if (queue[id]) {
-                queue[id].cancel();
-            }
-        },
-        onError: function(id, msg) {
-            if (queue[id]) {
-                queue[id].error(msg);
-            }
+            getApplet().cancelDownload(id);
+            downloads[id] && downloads[id].cancel();
         }
     };
 
-    JJOS.Applet = function(params, callbacks) {
+    /**
+     * 
+     */
+    function checkStatus() {
+        clearInterval(statusTimer);
+        
+        var id, applet = getApplet(),
+            remove = {};
+        for (id in downloads) {
+            if (updateProgress(id, applet)) {
+                remove[id] = true;
+            }
+        }
+        
+        for (id in remove) {
+            delete downloads[id];
+        }
+        
+        if (downloads.length) {
+            statusTimer = setInterval(checkStatus, JJOS.params.statusUpdateInterval);
+        }
+    }
+    
+    /**
+     * 
+     * @param {Number} id The id of download to update.
+     * @param {Element} applet A reference to the download applet.
+     * @returns {Boolean} Whether the download should be removed from the list.
+     */
+    function updateProgress(id, applet) {
+        var params = {id : id};
+        applet.getDownloadStatus(params);
+        if (params.isDone) {
+            downloads[id].complete();
+        } else if (params.isCancelled) {
+            downloads[id].cancel();
+        } else if (params.error) {
+            downloads[id].error(params.error);
+        } else {
+            downloads[id].progress(params.bps, params.progress, params.total);
+            return false;
+        }
+        return true;
+    }
+    
+    function Download(id, callbacks) {
         var base = this;
 
-        var init = function() {
-            base.callbacks = callbacks;
-            base.id = 'JsJavaOpenSave_' + (uid++);
-            addApplet(base.id, params);
-            queue[base.id] = base;
-        };
+        base.callbacks = callbacks;
+        base.id = id;
 
         base.complete = function(data) {
             typeof(base.callbacks.onComplete) === "function" && base.callbacks.onComplete(data);
-            removeApplet(base.id);
         };
-        base.progress = function(bps, done, total) {
-            typeof(base.callbacks.onProgress) === "function" && base.callbacks.onProgress(bps, done, total);
+        base.progress = function(bps, progress, total) {
+            typeof(base.callbacks.onProgress) === "function" && base.callbacks.onProgress(bps, progress, total);
         };
         base.cancel = function() {
             typeof(base.callbacks.onCancel) === "function" && base.callbacks.onCancel();
-            removeApplet(base.id);
         };
         base.error = function(msg) {
             typeof(base.callbacks.onError) === "function" && base.callbacks.onError(msg);
-            removeApplet(base.id);
         };
-
-        init();
     };
-
+    
     function getApplet() {
-        var id = 'JJOS_applet',
-            applet = document.getElementById(id);
-        if (!applet) {
-            addApplet(id, {});
-        }
-        return applet ? applet : document.getElementById(id);
+        var applet = document.getElementById(appletId);
+        return applet ? applet : addApplet(appletId);
     }
-
+    
     function addApplet(id, params, code) {
-        var key, applet = document.createElement('applet');
+        var applet = document.createElement('applet');
         applet.id = id;
-        applet.code = code || 'JsJavaOpenSave/JsJavaOpenSave.class';
+        applet.code = code || JJOS.params.code;
         applet.archive = JJOS.params.jar;
         applet.width = JJOS.params.width;
         applet.height = JJOS.params.height;
         applet.mayscript = 'true';
 
-        for (key in params) {
+        for (var key in params) {
             applet.appendChild(makeParam(key, params[key]));
         }
 
         document.body.appendChild(applet);
+        return document.getElementById(id);
     }
-
+    
     function makeParam(key, value) {
         var param = document.createElement('param');
         param.name = key;
@@ -191,12 +210,9 @@
         return param;
     }
 
-    function removeApplet(id) {
-        queue[id] && (delete queue[id]);
-        var el = document.getElementById(id);
-        el && el.parentNode.removeChild(el);
-    }
-    
+// Load the applet initially
+getApplet();
+
 // Support for various JS libraries
 function getCallbacks(deferred) {
     return {
