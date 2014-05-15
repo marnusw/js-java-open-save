@@ -16,7 +16,7 @@ import java.net.URLConnection;
  */
 public class DownloadToFileThread implements Runnable {
 
-    private final int bufSize = 2*1024*1024;
+    private final int bufSize = 6*1024*1024;
     private final DownloadStatus status;
 
     public DownloadToFileThread(DownloadStatus status) {
@@ -25,15 +25,16 @@ public class DownloadToFileThread implements Runnable {
 
     @Override
     public void run() {
-        URLConnection resource;
+        URLConnection connection;
         try {
-            resource = new URL(this.status.getUrl()).openConnection();
+            connection = new URL(this.status.getUrl()).openConnection();
+            connection.setUseCaches(false);
         } catch (IOException ioe) {
             this.status.error(ioe.getMessage());
             return;
         }
         try (
-            BufferedInputStream in = new BufferedInputStream(resource.getInputStream());
+            BufferedInputStream in = new BufferedInputStream(connection.getInputStream());
             OutputStream out = new FileOutputStream(new File(this.status.getFileName()));
         ) {
             byte buffer[] = new byte[this.bufSize];
@@ -42,8 +43,8 @@ public class DownloadToFileThread implements Runnable {
                 prevTotal = 0,
                 total = 0,
                 count;
-
-            this.status.setTotalSize(resource.getContentLength());
+            
+            this.status.setTotalSize(connection.getContentLength());
             double rate = 0.0;
 
             long endTime, longStartTime, shortStartTime = System.nanoTime() / 1000000;
