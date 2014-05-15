@@ -86,7 +86,7 @@
          * @param {String} id
          */
         cancelDownload: function(id) {
-            getApplet().cancelDownload(id);
+            getApplet().cancelDownload({id:id});
             downloads[id] && downloads[id].cancel();
         },
         /**
@@ -210,11 +210,12 @@
     function addApplet(id, params, code) {
         var applet = document.createElement('applet');
         applet.id = id;
+        applet.mayscript = 'true';
         applet.code = code || JJOS.params.code;
         applet.archive = JJOS.params.jar;
         applet.width = JJOS.params.width;
         applet.height = JJOS.params.height;
-        applet.mayscript = 'true';
+        applet.style = 'z-index:-10000';
 
         for (var key in params) {
             applet.appendChild(makeParam(key, params[key]));
