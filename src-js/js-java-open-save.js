@@ -59,36 +59,6 @@
             return params.chosenFolder;
         },
         /**
-         * Load the contents of a file from the file system using a JsJavaOpenSave applet.
-         *
-         * @param {String} fileName The full path to load file content from.
-         * @param {Object} callbacks Optional onComplete(data), onProgress(done, total), onCancel(), onError(msg).
-         * @return {String} A unique identifier for this operation.
-         */
-        load: function(fileName, callbacks) {
-            if (fileName) {
-                return new JJOS.Applet({
-                    fileName : fileName
-                }, callbacks).id;
-            }
-        },
-        /**
-         * Save the contents of a buffer to a file on the file system using a JsJavaOpenSave applet.
-         *
-         * @param {String} fileName The full path of the file to save to.
-         * @param {String} data The data that will be written to the file.
-         * @param {Object} callbacks Optional onComplete(data), onProgress(done, total), onCancel(), onError(msg).
-         * @return {String} A unique identifier for this operation.
-         */
-        save: function(fileName, data, callbacks) {
-            if (fileName && data) {
-                return new JJOS.Applet({
-                    fileName : fileName,
-                    data : data
-                }, callbacks).id;
-            }
-        },
-        /**
          * Download a file from a provided URL to a specified file on disk using a JsJavaOpenSave applet.
          *
          * @param {String} fileName The full path to save the downloaded file to.
@@ -114,9 +84,53 @@
          *
          * @param {String} id
          */
-        cancel: function(id) {
+        cancelDownload: function(id) {
             getApplet().cancelDownload(id);
             downloads[id] && downloads[id].cancel();
+        },
+        /**
+         * Save the contents of a buffer to a file on the file system using a JsJavaOpenSave applet.
+         *
+         * @param {String} fileName The full path of the file to save to.
+         * @param {String} data The data that will be written to the file.
+         * @param {Object} callbacks Optional onComplete(), onError(msg).
+         * @return {String} A unique identifier for this operation.
+         */
+        save: function(fileName, data, callbacks) {
+            if (fileName && data) {
+                var operation = new Operation(callbacks),
+                    applet = getApplet(),
+                    params = {
+                        fileName : fileName,
+                        data : data
+                    };
+                applet.saveToFile(params);
+                if (params.error) {
+                    operation.error(params.error);
+                } else {
+                    operation.complete();
+                }
+            }
+        },
+        /**
+         * Load the contents of a file from the file system using a JsJavaOpenSave applet.
+         *
+         * @param {String} fileName The full path to load file content from.
+         * @param {Object} callbacks Optional onComplete(data), onError(msg).
+         * @return {String} A unique identifier for this operation.
+         */
+        load: function(fileName, callbacks) {
+            if (fileName) {
+                var operation = new Operation(callbacks),
+                    applet = getApplet(),
+                    params = {fileName : fileName};
+                applet.loadFromFile(params);
+                if (params.data) {
+                    operation.complete(params.data);
+                } else {
+                    operation.error(params.error);
+                }
+            }
         }
     };
 
@@ -168,11 +182,10 @@
         return true;
     }
     
-    function Download(id, callbacks) {
+    function Operation(callbacks) {
         var base = this;
 
-        base.callbacks = callbacks;
-        base.id = id;
+        base.callbacks = callbacks || {};
 
         base.complete = function(data) {
             typeof(base.callbacks.onComplete) === "function" && base.callbacks.onComplete(data);
@@ -257,16 +270,16 @@ if (window.jQuery !== undefined) {
             },
             save: function(fileName, data) {
                 var deferred = $.Deferred();
-                lastId = JsJavaOpenSave.save(fileName, data, getCallbacks(deferred));
+                JsJavaOpenSave.save(fileName, data, getCallbacks(deferred));
                 return deferred.promise();
             },
             load: function(fileName) {
                 var deferred = $.Deferred();
-                lastId = JsJavaOpenSave.load(fileName, getCallbacks(deferred));
+                JsJavaOpenSave.load(fileName, getCallbacks(deferred));
                 return deferred.promise();
             },
-            cancel: function(id) {
-                JsJavaOpenSave.cancel(id);
+            cancelDownload: function(id) {
+                JsJavaOpenSave.cancelDownload(id);
             }
         };
     })(jQuery);
@@ -299,16 +312,16 @@ if (window.angular !== undefined) {
             },
             save: function(fileName, data) {
                 var deferred = $q.defer();
-                lastId = JsJavaOpenSave.save(fileName, data, getCallbacks(deferred));
+                JsJavaOpenSave.save(fileName, data, getCallbacks(deferred));
                 return deferred.promise;
             },
             load: function(fileName) {
                 var deferred = $q.defer();
-                lastId = JsJavaOpenSave.load(fileName, getCallbacks(deferred));
+                JsJavaOpenSave.load(fileName, getCallbacks(deferred));
                 return deferred.promise;
             },
-            cancel: function(id) {
-                JsJavaOpenSave.cancel(id);
+            cancelDownload: function(id) {
+                JsJavaOpenSave.cancelDownload(id);
             }
         };
     }]);

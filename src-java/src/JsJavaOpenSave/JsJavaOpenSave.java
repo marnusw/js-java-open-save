@@ -130,6 +130,36 @@ public class JsJavaOpenSave extends Applet {
     }
     
     /**
+     * Save the contents of _data_ to a specified file on disk. If an error
+     * occurs the error message is returned.
+     *
+     * @param params Parameters: fileName (in), data (in), error (out).
+     */
+    public void saveToFile(JSObject params) {
+        String fileName = (String)params.getMember("fileName");
+        String data = (String)params.getMember("data");
+        
+        String error = AccessController.doPrivileged(new SaveToFileAction(fileName, data));
+        params.setMember("error", error);
+    }
+    
+    /**
+     * Load the contents of a specified file on disk into a data buffer. If an error
+     * occurs the error message is returned.
+     *
+     * @param params Parameters: fileName (in), data (out), error (out).
+     */
+    public void loadFromFile(JSObject params) {
+        String fileName = (String)params.getMember("fileName");
+        
+        String returnParams[] = new String[] {"", ""};
+        AccessController.doPrivileged(new LoadFromFileAction(fileName, returnParams));
+        
+        params.setMember("data", returnParams[0]);
+        params.setMember("error", returnParams[1]);
+    }
+    
+    /**
      * @return A unique id.
      */
     private int nextId() {
