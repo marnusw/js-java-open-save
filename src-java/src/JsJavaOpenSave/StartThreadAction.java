@@ -7,11 +7,11 @@ import java.security.PrivilegedAction;
  *
  * @author marnusw
  */
-public class StartThread implements PrivilegedAction {
+public class StartThreadAction implements PrivilegedAction {
 
     private final Runnable runnable;
 
-    public StartThread(Runnable runnable) {
+    public StartThreadAction(Runnable runnable) {
         this.runnable = runnable;
     }
     

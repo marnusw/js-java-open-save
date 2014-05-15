@@ -81,7 +81,7 @@ public class JsJavaOpenSave extends Applet {
         if (download == null) {
             params.setMember("started", "");
         } else {
-            AccessController.doPrivileged(new StartThread(new DownloadToFileAction(download)));
+            AccessController.doPrivileged(new StartThreadAction(new DownloadToFileThread(download)));
             params.setMember("started", "true");
         }
     }

@@ -14,12 +14,12 @@ import java.net.URLConnection;
  *
  * @author marnusw
  */
-public class DownloadToFileAction implements Runnable {
+public class DownloadToFileThread implements Runnable {
 
     private final int bufSize = 2*1024*1024;
     private final DownloadStatus status;
 
-    public DownloadToFileAction(DownloadStatus status) {
+    public DownloadToFileThread(DownloadStatus status) {
         this.status = status;
     }
 
